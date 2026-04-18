@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#61bde8" />
+  <title>D9 Pedidos</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar compact">
+      <div class="brand-wrap">
+        <div class="brand-icon">D9</div>
+        <div>
+          <h1 id="appTitle">D9 Pedidos</h1>
+          <p id="empresaLabel">Cargando…</p>
+        </div>
+      </div>
+      <button id="btnPancko" class="pancko-btn" type="button">Pancko</button>
+    </header>
+
+    <section class="status-strip compact">
+      <div id="networkStatus" class="badge">Verificando…</div>
+      <div id="sellerBadge" class="badge muted">Sin usuario</div>
+      <div id="pendingBadge" class="badge alert hidden">0 pendientes</div>
+    </section>
+
+    <main>
+      <section id="view-home" class="view active">
+        <div class="home-grid">
+          <button id="btnGoOrder" class="home-btn primary-home" data-title="Generar pedido" data-sub="Cliente, productos y envío" type="button">
+            <span class="home-btn-title">Generar pedido</span>
+            <span class="home-btn-sub">Cliente, productos y envío</span>
+          </button>
+
+          <button id="btnGoPrices" class="home-btn" type="button">
+            <span class="home-btn-title">Lista de precios</span>
+            <span class="home-btn-sub">Consultar precios</span>
+          </button>
+
+          <button id="btnGoHistory" class="home-btn" type="button">
+            <span class="home-btn-title">Historial</span>
+            <span class="home-btn-sub">Pedidos guardados en este celular</span>
+          </button>
+
+          <button id="btnChangeSeller" class="home-btn slim" data-title="Ingresar" data-sub="Acceder con usuario y clave" type="button">
+            <span class="home-btn-title">Ingresar</span>
+            <span class="home-btn-sub">Acceder con usuario y clave</span>
+          </button>
+
+          <button id="btnSyncPending" class="home-btn slim" data-title="Pendientes" data-sub="Reintentar registros pendientes" type="button">
+            <span class="home-btn-title">Pendientes</span>
+            <span class="home-btn-sub">Reintentar registros pendientes</span>
+          </button>
+        </div>
+
+        <section id="bannerWrap" class="banner-wrap hidden"></section>
+      </section>
+
+      <section id="view-order" class="view">
+        <div class="view-head">
+          <button class="back-btn" data-back="home" type="button">←</button>
+          <div>
+            <h2>Generar pedido</h2>
+            <p class="subhead">Más rápido, más limpio, menos scroll.</p>
+          </div>
+        </div>
+
+        <div class="card quick-grid-card">
+          <button id="btnOpenClients" class="picker-btn" type="button">
+            <span class="picker-label">Cliente</span>
+            <strong id="selectedClientLabel">Seleccionar cliente</strong>
+          </button>
+
+          <button id="btnOpenCategories" class="picker-btn" type="button">
+            <span class="picker-label">Categoría</span>
+            <strong id="selectedCategoryLabel">Todas las categorías</strong>
+          </button>
+
+          <button id="btnOpenProducts" class="picker-btn" type="button">
+            <span class="picker-label">Productos</span>
+            <strong id="selectedProductsLabel">Seleccionar productos</strong>
+          </button>
+        </div>
+
+        <div id="selectedClientCard" class="selected-card hidden"></div>
+
+        <div id="orderPriceListBox" class="card price-mode-box hidden">
+          <label class="picker-label" for="orderPriceListSelect">Lista para este pedido</label>
+          <select id="orderPriceListSelect" class="select">
+            <option value="lista_1">Lista_1 · Contado</option>
+            <option value="lista_2">Lista_2 · Pueblos</option>
+            <option value="lista_3">Lista_3 · Vendedores</option>
+          </select>
+          <div id="orderPriceListInfo" class="mini-text price-info"></div>
+        </div>
+
+        <div class="card section-block">
+          <div class="section-title-row between hidden-preview-section">
+            <h3>Pedido actual</h3>
+            <button id="btnClearCart" class="link-btn danger" type="button">Limpiar</button>
+          </div>
+
+          <div id="cartList" class="cart-list empty-state hidden-preview-section">Todavía no agregaste productos.</div>
+
+          <div class="summary-box compact-summary hidden-preview-section">
+            <div class="summary-row"><span>Items</span><strong id="summaryItems">0</strong></div>
+            <div class="summary-row total"><span>Total</span><strong id="summaryTotal">$ 0</strong></div>
+          </div>
+
+          <div class="preview-box compact-preview">
+            <div class="preview-head">Vista previa</div>
+            <pre id="messagePreview">Seleccioná cliente y productos.</pre>
+          </div>
+
+          <div class="actions-stack">
+            <button id="btnSavePending" class="secondary-btn" data-title="Guardar pendiente" type="button">Guardar pendiente</button>
+            <button id="btnSend" class="primary-btn" data-title="Enviar pedido" type="button">Enviar pedido</button>
+          </div>
+        </div>
+      </section>
+
+
+      <section id="view-prices" class="view">
+        <div class="view-head">
+          <button class="back-btn" data-back="home" type="button">←</button>
+          <div>
+            <h2>Lista de precios</h2>
+            <p class="subhead">Consulta rápida por categoría y usuario.</p>
+          </div>
+        </div>
+
+        <div class="card section-block">
+          <div id="priceListModeBox" class="price-mode-box hidden">
+            <label class="picker-label" for="priceListSelect">Lista activa</label>
+            <select id="priceListSelect" class="select">
+              <option value="lista_1">Lista_1 · Contado</option>
+              <option value="lista_2">Lista_2 · Pueblos</option>
+              <option value="lista_3">Lista_3 · Vendedores</option>
+            </select>
+          </div>
+
+          <input id="priceSearch" class="input" type="search" placeholder="Buscar producto..." autocomplete="off" />
+          <div id="priceCategoryWrap" class="chips-row"></div>
+          <div id="priceListInfo" class="mini-text price-info"></div>
+          <div id="priceProductsList" class="price-products-list"></div>
+        </div>
+      </section>
+
+      <section id="view-history" class="view">
+        <div class="view-head">
+          <button class="back-btn" data-back="home" type="button">←</button>
+          <div>
+            <h2>Historial</h2>
+            <p class="subhead">Movimientos guardados en este usuario.</p>
+          </div>
+          <button id="btnExportHistory" class="link-btn" type="button">Exportar</button>
+        </div>
+
+        <div class="card">
+          <div id="historyList" class="history-list empty-state">Sin movimientos todavía.</div>
+        </div>
+      </section>
+
+      <section id="view-support" class="view">
+        <div class="view-head">
+          <button class="back-btn" data-back="home" type="button">←</button>
+          <div>
+            <h2>Soporte</h2>
+            <p class="subhead">Contacto y datos del desarrollador.</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div id="supportBox" class="support-box">Cargando…</div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  
+  <div id="loginModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel">
+      <div class="login-brand">D9</div>
+      <h3>Ingreso de usuario</h3>
+      <p class="modal-text">Entrá con tu usuario y clave o seguí en modo invitado.</p>
+      <input id="sellerUser" class="input login-select" type="text" placeholder="Usuario" autocomplete="username" />
+      <input id="sellerPass" class="input" type="password" placeholder="Clave" autocomplete="current-password" />
+      <button id="btnLogin" class="primary-btn full-btn" type="button">Ingresar</button>
+      <button id="btnLogout" class="secondary-btn full-btn hidden" type="button">Cerrar sesión</button>
+      <button id="btnCloseLogin" class="secondary-btn full-btn hidden" type="button">Cerrar</button>
+    </div>
+  </div>
+
+  <div id="clientModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal="client"></div>
+    <div class="modal-panel tall-panel">
+      <div class="modal-head-row">
+        <h3>Seleccionar cliente</h3>
+        <button class="ghost-x" data-close-modal="client" type="button">✕</button>
+      </div>
+      <input id="clientSearch" class="input" type="search" placeholder="Buscar cliente..." autocomplete="off" />
+      <div id="clientList" class="option-list modal-list"></div>
+    </div>
+  </div>
+
+
+  <div id="occasionalClientModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal="occasionalClient"></div>
+    <div class="modal-panel tall-panel">
+      <div class="modal-head-row">
+        <h3>Cliente nuevo / ocasional</h3>
+        <button class="ghost-x" data-close-modal="occasionalClient" type="button">✕</button>
+      </div>
+      <input id="occasionalName" class="input" type="text" placeholder="Nombre" autocomplete="off" />
+      <input id="occasionalPhone" class="input" type="tel" placeholder="Teléfono" autocomplete="off" />
+      <input id="occasionalAddress" class="input" type="text" placeholder="Dirección" autocomplete="off" />
+      <input id="occasionalCity" class="input" type="text" placeholder="Ciudad" autocomplete="off" />
+      <div id="occasionalPriceWrap">
+        <label class="picker-label" for="occasionalPriceList">Lista de precios</label>
+        <select id="occasionalPriceList" class="select">
+          <option value="lista_1">Lista_1 · Contado</option>
+          <option value="lista_2">Lista_2 · Pueblos</option>
+          <option value="lista_3">Lista_3 · Vendedores</option>
+        </select>
+      </div>
+      <div class="modal-actions sticky-modal-actions">
+        <button id="btnSaveOccasionalClient" class="primary-btn full-btn" type="button">Usar este cliente</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="categoryModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal="category"></div>
+    <div class="modal-panel tall-panel">
+      <div class="modal-head-row">
+        <h3>Seleccionar categoría</h3>
+        <button class="ghost-x" data-close-modal="category" type="button">✕</button>
+      </div>
+      <div id="categoryList" class="option-list modal-list"></div>
+    </div>
+  </div>
+
+  <div id="productModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal="product"></div>
+    <div class="modal-panel tall-panel">
+      <div class="modal-head-row">
+        <div>
+          <h3>Seleccionar productos</h3>
+          <p id="productModalHint" class="modal-text small-gap">Podés marcar varios.</p>
+        </div>
+        <button class="ghost-x" data-close-modal="product" type="button">✕</button>
+      </div>
+      <input id="productSearch" class="input" type="search" placeholder="Buscar producto..." autocomplete="off" />
+      <div id="productList" class="product-list modal-list"></div>
+      <button class="primary-btn full-btn sticky-action" data-close-modal="product" type="button">Listo</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+
+  <div id="priceCategoryModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close-modal="priceCategory"></div>
+    <div class="modal-panel tall-panel">
+      <div class="modal-head-row">
+        <h3>Categorías</h3>
+        <button class="ghost-x" data-close-modal="priceCategory" type="button">✕</button>
+      </div>
+      <div id="priceCategoryList" class="option-list modal-list"></div>
+    </div>
+  </div>
+
+</body>
+</html>
