@@ -338,20 +338,14 @@ function loginSeller() {
   state.seller = seller;
   saveJSON(STORAGE_KEYS.seller, { id: seller.id, nombre: seller.nombre, usuario: seller.usuario });
   applyUserContext();
-  renderSellerBadge();
   syncSessionUI();
-  renderQuickLabels();
-  renderSelectedClient();
-  renderProducts();
-  renderCart();
-  renderPriceListControls();
-  renderPriceProducts();
+  renderAll();
   closeLogin();
   showView("home");
   toast(`Hola, ${seller.nombre}`);
 }
 
-function activePriceKey() {
+function getActivePriceList() {
   if (!state.seller) return "lista_1";
   if (state.seller?.rol === "cliente") return state.selectedClient?.lista_precio || state.seller.lista_precio || "lista_1";
   return state.activePriceList || "lista_1";
@@ -367,7 +361,7 @@ function priceLabel(key) {
 }
 
 function productPrice(product) {
-  const key = activePriceKey();
+  const key = getActivePriceList();
   return Number(product?.precios?.[key] || 0);
 }
 
@@ -503,7 +497,7 @@ function openOccasionalClientModal() {
   $("#occasionalCity").value = "";
   const priceField = $("#occasionalPriceList");
   const priceWrap = $("#occasionalPriceWrap");
-  if (priceField) priceField.value = activePriceKey() || "lista_1";
+  if (priceField) priceField.value = getActivePriceList() || "lista_1";
   if (priceWrap) priceWrap.classList.toggle("hidden", !state.seller || state.seller?.rol !== "vendedor");
   closeModal("client");
   openModal("occasionalClient");
@@ -531,7 +525,9 @@ function saveOccasionalClient() {
     ocasional: true
   };
   state.guestClientDraft = state.selectedClient;
-  saveJSON(STORAGE_KEYS.guestClient, state.guestClientDraft);
+  if (!state.seller) {
+    saveJSON(STORAGE_KEYS.guestClient, state.guestClientDraft);
+  }
   state.activePriceList = lista;
   if (previousId && previousId !== nextId && state.cart.length) {
     state.cart = state.cart.map(item => ({ ...item, precio: productPrice(item) }));
@@ -550,11 +546,6 @@ function saveOccasionalClient() {
   refreshPricesAcrossApp();
   renderCart();
   showView("order");
-  setTimeout(() => {
-    closeModal("occasionalClient");
-    renderQuickLabels();
-    renderCart();
-  }, 30);
 }
 
 function renderPriceListControls() {
@@ -573,8 +564,8 @@ function renderPriceListControls() {
 
   if (state.seller.rol === "vendedor") {
     modeBox.classList.remove("hidden");
-    select.value = activePriceKey();
-    info.textContent = `Estás viendo ${priceLabel(activePriceKey())}.`;
+    select.value = getActivePriceList();
+    info.textContent = `Estás viendo ${priceLabel(getActivePriceList())}.`;
   } else {
     modeBox.classList.add("hidden");
     info.textContent = "Estás viendo tus precios asignados.";
@@ -630,7 +621,7 @@ function renderPriceProducts() {
       </div>
       <div class="price-row-side">
         <strong>${money(productPrice(p))}</strong>
-        ${state.seller?.rol === "vendedor" ? `<div class="mini-text">${priceLabel(activePriceKey())}</div>` : ``}
+        ${state.seller?.rol === "vendedor" ? `<div class="mini-text">${priceLabel(getActivePriceList())}</div>` : ``}
       </div>
     </div>
   `).join("");
@@ -710,7 +701,6 @@ function toggleProduct(id) {
   renderProducts();
   renderQuickLabels();
   renderCart();
-  setTimeout(() => renderCart(), 10);
 }
 
 function updateQty(id, delta) {
@@ -722,7 +712,6 @@ function updateQty(id, delta) {
   renderProducts();
   renderQuickLabels();
   renderCart();
-  setTimeout(() => renderCart(), 10);
 }
 
 function removeItem(id) {
@@ -730,7 +719,6 @@ function removeItem(id) {
   renderProducts();
   renderQuickLabels();
   renderCart();
-  setTimeout(() => renderCart(), 10);
 }
 
 function clearCart() {
@@ -738,7 +726,6 @@ function clearCart() {
   renderProducts();
   renderQuickLabels();
   renderCart();
-  setTimeout(() => renderCart(), 10);
 }
 
 function cartTotal() {
@@ -755,7 +742,7 @@ function generateMessageText(payload = null) {
   if (!source.cliente || !source.carrito.length) return "Seleccioná cliente y productos.";
   const lines = [
     "Pedido:",
-    `Cliente: ${source.cliente.nombre}`,
+    `Cliente: ${source.cliente.nombre_real || source.cliente.nombre}`,
     source.vendedor?.nombre ? `Usuario: ${source.vendedor.nombre}` : "",
     ""
   ].filter(Boolean);
@@ -816,7 +803,7 @@ function buildWebhookPayload(payload) {
   return {
     vendedor_id: payload?.vendedor?.id || "",
     vendedor: payload?.vendedor?.nombre || "",
-    cliente: payload?.cliente?.nombre || "",
+    cliente: payload?.cliente?.nombre_real || payload?.cliente?.nombre || "",
     items: (payload?.carrito || []).map(item => ({
       nombre: item.nombre,
       cantidad: Number(item.cantidad || 0),
@@ -854,10 +841,10 @@ async function trySendToWebhook(payload) {
 function saveHistory(payload, status = "enviado", error = "") {
   const history = readJSON(STORAGE_KEYS.history, []);
   history.unshift({
-    id: `${payload.fecha}_${payload.cliente?.id || payload.cliente?.nombre || "pedido"}_${Math.random().toString(36).slice(2, 8)}`,
+    id: `${payload.fecha}_${payload.cliente?.id || payload.cliente?.nombre_real || payload.cliente?.nombre || "pedido"}_${Math.random().toString(36).slice(2, 8)}`,
     fecha: payload.fecha,
     vendedor: payload.vendedor?.nombre || "",
-    cliente: payload.cliente?.nombre || "",
+    cliente: payload.cliente?.nombre_real || payload.cliente?.nombre || "",
     cliente_id: payload.cliente?.id || "",
     detalle: payload.detalle,
     total: payload.total,
@@ -1262,7 +1249,7 @@ async function disableServiceWorkerAndCaches() {
 }
 
 async function init() {
-  await disableServiceWorkerAndCaches();
+  // disableServiceWorkerAndCaches(); // usar solo para debug de cache/SW
   bind();
   try {
     await loadAllData();
