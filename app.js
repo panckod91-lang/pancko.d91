@@ -313,20 +313,8 @@ function closeLogin() {
 }
 
 function logoutSeller() {
-  state.seller = null;
   localStorage.removeItem(STORAGE_KEYS.seller);
-  state.activePriceList = "lista_1";
-  state.selectedClient = null;
-  state.selectedCategory = "";
-  state.priceCategory = "";
-  state.cart = [];
-  syncSessionUI();
-  renderSellerBadge();
-  applyUserContext();
-  renderAll();
-  closeLogin();
-  showView("home");
-  toast("Sesión cerrada.");
+  window.location.reload();
 }
 
 function loginSeller() {
